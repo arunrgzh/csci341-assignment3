@@ -25,6 +25,10 @@ def create_app():
     # Initialize database
     db.init_app(app)
     
+    # Create tables if they don't exist (for Railway deployment)
+    with app.app_context():
+        db.create_all()
+    
     return app
 
 
