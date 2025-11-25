@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}{{ label }}{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <div class="table-header">
+        <h2>{{ label }}</h2>
+        <a href="{{ url_for('create_record', table_name=table_name) }}" class="button button-primary">Create New Job</a>
+    </div>
+
+    {% if records %}
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Member</th>
+                    <th>Required Type</th>
+                    <th>Requirements</th>
+                    <th>Date Posted</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td>{{ record.job_id }}</td>
+                    <td>{{ record.member.user.given_name }} {{ record.member.user.surname }}</td>
+                    <td><span class="badge badge-{{ record.required_caregiving_type }}">{{ record.required_caregiving_type }}</span></td>
+                    <td>{{ (record.other_requirements[:60] + '...') if record.other_requirements and record.other_requirements|length > 60 else (record.other_requirements or '-') }}</td>
+                    <td>{{ record.date_posted|serialize }}</td>
+                    <td class="actions">
+                        <a href="{{ url_for('edit_record', table_name=table_name, record_id=record.job_id) }}" 
+                           class="button button-small button-secondary">Edit</a>
+                        <form method="POST" action="{{ url_for('delete_record', table_name=table_name, record_id=record.job_id) }}" 
+                              style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this job?');">
+                            <button type="submit" class="button button-small button-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No jobs found.</p>
+        <a href="{{ url_for('create_record', table_name=table_name) }}" class="button button-primary">Create First Job</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

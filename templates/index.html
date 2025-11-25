@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Caregiver Management System{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h1>Dashboard</h1>
+    <p class="subtitle">Manage your caregiver database</p>
+
+    <div class="stats-grid">
+        {% for stat in stats %}
+        <div class="stat-card">
+            <h3>{{ stat.label }}</h3>
+            <p class="stat-number">{{ stat.count }}</p>
+            <a href="{{ url_for('list_records', table_name=stat.name) }}" class="button">View All</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

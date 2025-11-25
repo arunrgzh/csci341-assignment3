@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit' if mode == 'edit' else 'Create' }} {{ label }}{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <h2>{{ 'Edit' if mode == 'edit' else 'Create' }} {{ label }}</h2>
+        <a href="{{ url_for('list_records', table_name=table_name) }}" class="button button-secondary">Back to List</a>
+    </div>
+
+    <form method="POST" class="form">
+        {% for field in fields %}
+        <div class="form-group {% if errors.get(field.name) %}has-error{% endif %}">
+            <label for="{{ field.name }}">
+                {{ field.label }}
+                {% if field.required %}<span class="required">*</span>{% endif %}
+            </label>
+
+            {% if field.type == 'textarea' %}
+                <textarea 
+                    id="{{ field.name }}" 
+                    name="{{ field.name }}"
+                    rows="4"
+                    {% if field.required %}required{% endif %}
+                >{{ field.value }}</textarea>
+
+            {% elif field.type == 'select' %}
+                <select 
+                    id="{{ field.name }}" 
+                    name="{{ field.name }}"
+                    {% if field.required %}required{% endif %}
+                >
+                    <option value="">-- Select --</option>
+                    {% for choice_value, choice_label in field.choices %}
+                        <option value="{{ choice_value }}" 
+                            {% if field.value|string == choice_value|string %}selected{% endif %}>
+                            {{ choice_label }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+            {% elif field.type == 'password' %}
+                <input 
+                    type="password" 
+                    id="{{ field.name }}" 
+                    name="{{ field.name }}"
+                    value="{{ field.value }}"
+                    {% if field.required %}required{% endif %}
+                >
+
+            {% elif field.type == 'number' %}
+                <input 
+                    type="number" 
+                    id="{{ field.name }}" 
+                    name="{{ field.name }}"
+                    value="{{ field.value }}"
+                    step="{{ field.step or 'any' }}"
+                    {% if field.required %}required{% endif %}
+                >
+
+            {% elif field.type == 'date' %}
+                <input 
+                    type="date" 
+                    id="{{ field.name }}" 
+                    name="{{ field.name }}"
+                    value="{{ field.value }}"
+                    {% if field.required %}required{% endif %}
+                >
+
+            {% elif field.type == 'time' %}
+                <input 
+                    type="time" 
+                    id="{{ field.name }}" 
+                    name="{{ field.name }}"
+                    value="{{ field.value }}"
+                    {% if field.required %}required{% endif %}
+                >
+
+            {% elif field.type == 'email' %}
+                <input 
+                    type="email" 
+                    id="{{ field.name }}" 
+                    name="{{ field.name }}"
+                    value="{{ field.value }}"
+                    {% if field.required %}required{% endif %}
+                >
+
+            {% else %}
+                <input 
+                    type="text" 
+                    id="{{ field.name }}" 
+                    name="{{ field.name }}"
+                    value="{{ field.value }}"
+                    {% if field.required %}required{% endif %}
+                >
+            {% endif %}
+
+            {% if errors.get(field.name) %}
+                <span class="error-message">{{ errors[field.name] }}</span>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        {% if errors.get('_general') %}
+        <div class="alert alert-error">
+            {{ errors['_general'] }}
+        </div>
+        {% endif %}
+
+        <div class="form-actions">
+            <button type="submit" class="button button-primary">
+                {{ 'Update' if mode == 'edit' else 'Create' }}
+            </button>
+            <a href="{{ url_for('list_records', table_name=table_name) }}" class="button button-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
