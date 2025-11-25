@@ -19,6 +19,45 @@ from models import (
 from forms import FORM_CONFIGS, prepare_form_fields, validate_form
 
 
+def parse_sql_statements(sql_content):
+    """Parse SQL content into individual statements, respecting string boundaries"""
+    statements = []
+    current_statement = []
+    in_string = False
+    string_char = None
+    i = 0
+    
+    while i < len(sql_content):
+        char = sql_content[i]
+        
+        # Handle string boundaries
+        if char in ("'", '"') and (i == 0 or sql_content[i-1] != '\\'):
+            if not in_string:
+                in_string = True
+                string_char = char
+            elif char == string_char:
+                in_string = False
+                string_char = None
+        
+        # Handle statement terminator (semicolon outside of strings)
+        if char == ';' and not in_string:
+            statement = ''.join(current_statement).strip()
+            if statement:
+                statements.append(statement)
+            current_statement = []
+        else:
+            current_statement.append(char)
+        
+        i += 1
+    
+    # Add any remaining statement
+    statement = ''.join(current_statement).strip()
+    if statement:
+        statements.append(statement)
+    
+    return statements
+
+
 def insert_initial_data(app):
     """Insert initial data from SQL file if tables are empty"""
     # Check if user_account table is empty
@@ -45,13 +84,13 @@ def insert_initial_data(app):
                 lines.append(line)
         sql_content = '\n'.join(lines)
         
-        # Split by semicolons and execute each statement
-        statements = sql_content.split(';')
+        # Parse SQL statements properly (respecting string boundaries)
+        statements = parse_sql_statements(sql_content)
         
         for statement in statements:
             statement = statement.strip()
             # Skip empty statements
-            if statement and len(statement) > 0:
+            if statement:
                 try:
                     db.session.execute(text(statement))
                     db.session.commit()  # Commit each statement individually
