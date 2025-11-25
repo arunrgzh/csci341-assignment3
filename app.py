@@ -60,8 +60,12 @@ def parse_sql_statements(sql_content):
 
 def insert_initial_data(app):
     """Insert initial data from SQL file if tables are empty"""
-    # Check if user_account table is empty
-    if UserAccount.query.count() > 0:
+    # Check if data already exists - check multiple tables to be sure
+    if (UserAccount.query.count() > 0 and 
+        Member.query.count() > 0 and 
+        Caregiver.query.count() > 0 and
+        Job.query.count() > 0):
+        app.logger.info("Data already exists, skipping insertion")
         return  # Data already exists
     
     # Read and execute insert_data.sql
@@ -87,25 +91,35 @@ def insert_initial_data(app):
         # Parse SQL statements properly (respecting string boundaries)
         statements = parse_sql_statements(sql_content)
         
-        for statement in statements:
+        success_count = 0
+        error_count = 0
+        
+        for idx, statement in enumerate(statements):
             statement = statement.strip()
             # Skip empty statements
             if statement:
                 try:
                     db.session.execute(text(statement))
                     db.session.commit()  # Commit each statement individually
+                    success_count += 1
+                    # Log successful inserts
+                    if statement.upper().startswith('INSERT'):
+                        table_name = statement.split()[2] if len(statement.split()) > 2 else 'unknown'
+                        app.logger.info(f"✓ Statement {idx+1}: Inserted into {table_name}")
                 except Exception as e:
                     db.session.rollback()  # Rollback failed statement
+                    error_count += 1
                     # Log but continue for sequence operations (setval) - they might fail
                     # if sequences have different names, but this is not critical
                     error_msg = str(e).lower()
                     if 'setval' in statement.lower() or 'sequence' in error_msg or 'does not exist' in error_msg:
                         app.logger.debug(f"Sequence operation skipped (non-critical): {str(e)}")
                     else:
-                        # For other errors, log and continue - we want to insert as much data as possible
-                        app.logger.warning(f"Error executing SQL statement: {str(e)}")
+                        # For other errors, log with more detail
+                        app.logger.error(f"✗ Statement {idx+1} FAILED: {str(e)}")
+                        app.logger.error(f"Failed SQL: {statement[:200]}...")
         
-        app.logger.info("Initial data inserted successfully")
+        app.logger.info(f"Data insertion complete: {success_count} succeeded, {error_count} failed")
     except Exception as e:
         db.session.rollback()
         app.logger.error(f"Error inserting initial data: {str(e)}")
