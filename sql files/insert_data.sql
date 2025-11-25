@@ -1,5 +1,3 @@
-
-
 -- INSERT sample data (10+ rows per table), Stranger Things themed + required real names
 -- 1) Users - (both members and caregivers)
 -- 1) Users - explicitly set user_id values
@@ -22,6 +20,7 @@ INSERT INTO user_account (user_id, email, given_name, surname, city, phone_numbe
 
 -- Reset the sequence to continue from 16
 SELECT setval('user_account_user_id_seq', 15, true);
+
 -- 2) Members 
 INSERT INTO member (member_user_id, house_rules, dependent_description) VALUES
 (3, 'No smoking. No late-night parties.', 'Will - 12 yo, sensitive to loud noises'),
@@ -105,7 +104,6 @@ INSERT INTO job_application (caregiver_user_id, job_id, date_applied) VALUES
 (15,11, '2025-11-05'),
 (4,  1, '2025-11-06');
 
-
 -- 7) confirmed appointments for aggregation queries
 INSERT INTO appointment (caregiver_user_id, member_user_id, appointment_date, appointment_time, work_hours, status) VALUES
 (5, 3, '2025-11-15','09:00', 3.00, 'confirmed'),
@@ -120,4 +118,3 @@ INSERT INTO appointment (caregiver_user_id, member_user_id, appointment_date, ap
 (1,12, '2025-11-20','10:00', 1.50, 'confirmed'),
 (5,3, '2025-11-21','09:00', 4.00, 'confirmed'),
 (7,1, '2025-11-22','14:00', 2.00, 'cancelled');
-
