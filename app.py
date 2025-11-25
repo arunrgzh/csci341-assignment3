@@ -1,7 +1,9 @@
+import os
 from datetime import date, time
 from decimal import Decimal
 
 from flask import Flask, abort, flash, redirect, render_template, request, url_for
+from sqlalchemy import text
 
 from config import Config
 from models import (
@@ -17,6 +19,58 @@ from models import (
 from forms import FORM_CONFIGS, prepare_form_fields, validate_form
 
 
+def insert_initial_data(app):
+    """Insert initial data from SQL file if tables are empty"""
+    # Check if user_account table is empty
+    if UserAccount.query.count() > 0:
+        return  # Data already exists
+    
+    # Read and execute insert_data.sql
+    sql_file_path = os.path.join(os.path.dirname(__file__), "sql files", "insert_data.sql")
+    
+    if not os.path.exists(sql_file_path):
+        app.logger.warning(f"SQL file not found: {sql_file_path}")
+        return
+    
+    try:
+        with open(sql_file_path, 'r', encoding='utf-8') as f:
+            sql_content = f.read()
+        
+        # Remove comments (lines starting with --)
+        lines = []
+        for line in sql_content.split('\n'):
+            # Remove inline comments
+            if '--' in line:
+                line = line[:line.index('--')]
+            lines.append(line)
+        sql_content = '\n'.join(lines)
+        
+        # Split by semicolons and execute each statement
+        statements = sql_content.split(';')
+        
+        for statement in statements:
+            statement = statement.strip()
+            # Skip empty statements
+            if statement and len(statement) > 0:
+                try:
+                    db.session.execute(text(statement))
+                except Exception as e:
+                    # Log but continue for sequence operations (setval) - they might fail
+                    # if sequences have different names, but this is not critical
+                    error_msg = str(e).lower()
+                    if 'setval' in statement.lower() or 'sequence' in error_msg or 'does not exist' in error_msg:
+                        app.logger.debug(f"Sequence operation skipped (non-critical): {str(e)}")
+                    else:
+                        # For other errors, log and continue - we want to insert as much data as possible
+                        app.logger.warning(f"Error executing SQL statement: {str(e)}")
+        
+        db.session.commit()
+        app.logger.info("Initial data inserted successfully")
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error inserting initial data: {str(e)}")
+
+
 def create_app():
     """Application factory"""
     app = Flask(__name__)
@@ -28,6 +82,8 @@ def create_app():
     # Create tables if they don't exist (for Railway deployment)
     with app.app_context():
         db.create_all()
+        # Insert initial data if tables are empty
+        insert_initial_data(app)
     
     return app
 
