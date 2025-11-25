@@ -7,7 +7,7 @@ class Config:
     # Database configuration
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL",
-        "postgresql+psycopg://postgres:Aarukow4171@localhost:5432/caregivers",
+        "postgresql://postgres:ZIFA0PI6fwmQlbjmPbEMC6QHGAJeq8is@dpg-d4iuqe95pdvs7385o020-a.oregon-postgres.render.com/caregivers",
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     

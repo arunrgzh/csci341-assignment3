@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 import sys
 
 
-DATABASE_URL = "postgresql://postgres:Aarukow4171@localhost:5432/caregivers"
+DATABASE_URL = "postgresql://postrges:ZIFA0PI6fwmQlbjmPbEMC6QHGAJeq8is@dpg-d4iuqe95pdvs7385o020-a.oregon-postgres.render.com/caregigvers"
 
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
