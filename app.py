@@ -36,13 +36,13 @@ def insert_initial_data(app):
         with open(sql_file_path, 'r', encoding='utf-8') as f:
             sql_content = f.read()
         
-        # Remove comments (lines starting with --)
+        # Remove comment lines (lines that start with --)
         lines = []
         for line in sql_content.split('\n'):
-            # Remove inline comments
-            if '--' in line:
-                line = line[:line.index('--')]
-            lines.append(line)
+            stripped = line.lstrip()
+            # Only remove lines that START with -- (not inline comments in strings)
+            if not stripped.startswith('--'):
+                lines.append(line)
         sql_content = '\n'.join(lines)
         
         # Split by semicolons and execute each statement
@@ -54,7 +54,9 @@ def insert_initial_data(app):
             if statement and len(statement) > 0:
                 try:
                     db.session.execute(text(statement))
+                    db.session.commit()  # Commit each statement individually
                 except Exception as e:
+                    db.session.rollback()  # Rollback failed statement
                     # Log but continue for sequence operations (setval) - they might fail
                     # if sequences have different names, but this is not critical
                     error_msg = str(e).lower()
@@ -64,7 +66,6 @@ def insert_initial_data(app):
                         # For other errors, log and continue - we want to insert as much data as possible
                         app.logger.warning(f"Error executing SQL statement: {str(e)}")
         
-        db.session.commit()
         app.logger.info("Initial data inserted successfully")
     except Exception as e:
         db.session.rollback()
